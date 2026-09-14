@@ -14,6 +14,10 @@ from __future__ import annotations
 import json
 import re
 import sys
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 from pathlib import Path
 from typing import Any
 
