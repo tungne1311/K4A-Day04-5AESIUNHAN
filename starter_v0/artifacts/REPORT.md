@@ -26,15 +26,21 @@ gate ở cả lớp prompt lẫn lớp tool.
 
 **Link dùng thử:**
 
-> Chưa có bản deploy public. Streamlit UI (`starter_v0/app.py`) thuộc phần việc
-> Thành viên 4 và tại thời điểm chốt báo cáo chưa có trong repository. Cách dùng
-> thử hiện tại là CLI, chạy trong thư mục `starter_v0/`:
+> Chưa có bản deploy public — agent chạy local. Hai cách dùng thử, đều trong thư
+> mục `starter_v0/`:
 >
 > ```powershell
+> # Web UI (Streamlit) — hiển thị tool trace, round/status, artifact version
+> pip install -r requirements.txt
+> streamlit run app.py
+>
+> # CLI
 > python chat.py --provider openai --version v3
 > ```
 >
-> Toàn bộ transcript ở mục A4 và B4 được sinh ra bằng đúng lệnh này trên
+> UI `app.py` tái sử dụng `run_model_tool_loop` từ `chat.py` nên hai đường chạy
+> qua đúng một agent loop, không phải hai implementation song song. Toàn bộ
+> transcript ở mục A4 và B4 được sinh ra bằng đường CLI trên
 > `artifact_version = v3+pa2fb6d80892d+tbacb472fddbb`.
 
 ## A2. Tool agent có
@@ -116,10 +122,24 @@ Bốn version được đo trên suite `base` (30 case, 10 multi-turn). Nguồn:
 | v2 | `system_prompt.md`: cấm đoán `asset_id`/`employee_id`, ép `clarify` khi thiếu identifier, rule ưu tiên thông tin mới nhất ở multi-turn | Ép `clarify` sẽ xử lý được nhóm `missing_info` và correction nhiều lượt | `case_accuracy` (base) | 0.9667 | 0.9667 | `runs/v2_B_base_openai_20260914T193401370103.json` ⚠️ |
 | v3 | Cả hai artifact: confirmation boundary cho `create_ticket` (kể cả stale confirmation), external data boundary cho `search_device_info`, prompt chuyển sang tiếng Việt | Quy tắc xác nhận an toàn sẽ bảo vệ agent ở các ca ghi dữ liệu | `case_accuracy` (base) | 0.9667 | 0.9667 | `runs/v3_B_base_openai_20260914T193927097375.json` ⚠️ |
 
-⚠️ **Bốn run file của suite `base` được `version_log.csv` dẫn chiếu nhưng chưa
-có trong repository.** Thư mục `runs/` nằm trong `.gitignore`, nên `git add`
-thường bỏ qua mà không báo lỗi; hiện chỉ có 3 run được force-add. Đây là việc
-còn thiếu của Thành viên 1, cần `git add -f` bốn file trên trước khi nộp.
+⚠️ **Bốn run file của suite `base` được `version_log.csv` dẫn chiếu nhưng không
+có trong repository.** Thư mục `runs/` nằm trong `.gitignore` nên `git add` bỏ
+qua mà không báo lỗi — đây là cùng một cái bẫy đã suýt làm mất run evidence của
+suite `group`. Bốn file gốc chỉ còn trên máy Thành viên 1.
+
+**Đã chạy lại suite `base` trên `v3` để repo có evidence thật cho bộ này:**
+`runs/v3_B_base_openai_20260914T211854940703.json` — `measured_cases` 30/30,
+`provider_error_cases` 0, `case_accuracy` **0.9667**, `multiturn_accuracy` 1.0.
+Con số khớp chính xác dòng `v3` trong `version_log.csv`, nên số liệu của Thành
+viên 1 được xác nhận độc lập dù file gốc đã mất. Case FAIL duy nhất là
+`H19_ambiguous_environment`: câu hỏi nêu môi trường *"demo của team QA"* —
+không thuộc enum `production`/`staging` — agent tự chọn `staging` thay vì gọi
+`clarify(response_type="choice")`. Đây đúng là biến thể của lỗi tự suy đoán khi
+thiếu thông tin, cùng họ với `G04` và `G01`.
+
+Hai dòng `v0` và `v1` vẫn không tái tạo được, vì `system_prompt.md` và
+`tools.yaml` của các version đó đã bị ghi đè; chỉ còn hash trong
+`version_log.csv` để truy vết.
 
 Suite `base` bão hòa ở 0.9667 (29/30) ngay từ `v1`, nên không phân biệt được
 `v1`, `v2`, `v3`. Hai suite dưới đây mới là thứ tách được ba version đó, và cả
@@ -589,19 +609,61 @@ Sao chép mẫu dưới đây cho từng thành viên:
 
 ### Ninh Quang Minh — 2A202602432 (minhnq-chc)
 
-> Vai trò: UI & Chat Experience Engineer — `app.py` (Streamlit),
-> `requirements.txt`, transcript và ảnh demo. Thành viên tự điền và tự commit
-> bằng Git identity của mình. Lưu ý: `starter_v0/app.py` hiện chưa có trong
-> repository — đây là deliverable còn thiếu duy nhất của bài nộp.
+> **Nguồn nội dung:** phần dưới đây do chính Ninh Quang Minh viết trong file
+> `starter_v0/REFLECTION.md`, commit `14c0a15` (*"feat(ui): complete Liquid Glass
+> Streamlit UI and integration (Member 4)"*). File đó bị xoá nhầm ở commit
+> `45d36ce` (*"xóa file rác"*); nội dung được khôi phục từ git history và chuyển
+> về đúng mục C2 theo yêu cầu của lab, sắp lại theo 8 đề mục chuẩn, không thêm ý
+> mới. **Bạn Minh cần đọc lại, chỉnh nếu cần và tự commit mục này bằng Git
+> identity của mình.**
 
-- **Vai trò/phần việc được nhận:**
+- **Vai trò/phần việc được nhận:** Thành viên 4 — UI & Chat Experience Engineer.
+
 - **Những gì tôi đã thay đổi trong repo chung:**
-- **File hoặc artifact liên quan:**
-- **Commit hash hoặc pull request:**
-- **Một quyết định kỹ thuật tôi đã đưa ra và lý do:**
-- **Khó khăn tôi gặp và cách tôi xử lý:**
-- **Điều tôi học được từ phần việc này:**
-- **Nếu làm lại, tôi sẽ cải thiện điều gì:**
+  - Đọc và phân tích kiến trúc backend `chat.py` để hiểu luồng
+    `run_model_tool_loop()` trước khi dựng UI;
+  - Thêm `streamlit>=1.30.0` vào `requirements.txt`;
+  - Viết `app.py`: import và gọi trực tiếp `run_model_tool_loop()`, quản lý lịch
+    sử hội thoại qua `st.session_state`;
+  - Hiển thị tool trace chi tiết từng vòng lặp bằng `st.expander` (tên tool,
+    arguments, result, trạng thái thành công/lỗi);
+  - Status badge trực quan cho `waiting_for_user` (⏸️) và `max_tool_rounds` (⚠️);
+  - Hàm `parse_assistant_text()` bóc tách JSON thô của model để chỉ hiển thị
+    trường `reply`/`message` cho người dùng cuối;
+  - Custom CSS theo hướng Liquid Glassmorphism, tự động theo Light/Dark mode;
+    đổi tên bot thành "Vhelpdesk Bot" và thêm avatar riêng;
+  - Sidebar compact, chuyển đổi song ngữ Anh/Việt, Mock/Demo mode 11 kịch bản
+    chạy không cần API key;
+  - Tính năng tải transcript JSON đúng schema gốc và auto-save vào `transcripts/`.
+
+- **File hoặc artifact liên quan:** `starter_v0/app.py`,
+  `starter_v0/requirements.txt`, `starter_v0/assets/vhelpdesk_avatar.jpg`.
+
+- **Commit hash hoặc pull request:** `14c0a15` — branch của Thành viên 4, đã
+  merge vào `main`.
+
+- **Một quyết định kỹ thuật tôi đã đưa ra và lý do:** Chọn Streamlit vì tính
+  đồng bộ, `session_state` quản lý trạng thái hiệu quả và dễ tích hợp component
+  render. Quyết định thứ hai: đặt `parse_assistant_text()` ở lớp UI thay vì sửa
+  output format của model — khi LLM buộc phải trả JSON cứng để phục vụ tool call
+  và internal logic, lớp UI nên đứng giữa làm bộ lọc hiển thị, như vậy không
+  phải đụng vào `system_prompt.md` của Thành viên 1.
+
+- **Khó khăn tôi gặp và cách tôi xử lý:** Streamlit là framework đóng, style UI
+  rất khó vì class sinh tự động (`st-emotion-cache`) thay đổi giữa các phiên bản.
+  Tôi dùng `data-testid` để inject CSS an toàn thay vì bám vào class sinh tự
+  động. Vấn đề thứ hai là chữ trắng trên nền trắng khi người dùng đổi Dark/Light
+  mode; tôi xử lý bằng cách dùng biến màu native của Streamlit
+  (`var(--background-color)`, `var(--secondary-background-color)`) kết hợp lớp
+  kính bán trong suốt `rgba(128,128,128,x)` thay vì hardcode màu.
+
+- **Điều tôi học được từ phần việc này:** Khi LLM trả cấu trúc JSON cứng, bộ phận
+  UI phải làm "bộ lọc" giữa dữ liệu máy đọc và thông tin người đọc. Và việc tuân
+  thủ nguyên tắc không sửa file của thành viên khác giúp UI layer cô lập hoàn
+  toàn trong `app.py`, hạn chế conflict khi merge.
+
+- **Nếu làm lại, tôi sẽ cải thiện điều gì:** *(phần này chưa có trong
+  `REFLECTION.md` gốc — bạn Minh tự bổ sung.)*
 
 ### Đỗ Thanh Tùng — 2A202602845
 
@@ -632,23 +694,28 @@ repository chung:
 
 - [x] `TEAMMATES.md` có đủ họ tên, MSSV, GitHub username và vai trò.
       *Đã kiểm tra: đủ 5 dòng, mỗi dòng có MSSV, GitHub username và file sở hữu.*
-- [ ] Mỗi thành viên có ít nhất một commit trong lịch sử branch nộp bài.
-      *`git log --format="%an <%ae>" | sort -u` trên `main` hiện cho **4/5**
-      thành viên: Pham Quang Huy, Do Tung, Tai-SE173015, hoang nguyen. **Thiếu
-      Ninh Quang Minh (`minhnq-chc`)** — branch của bạn này chưa được push/merge.*
+- [x] Mỗi thành viên có ít nhất một commit trong lịch sử branch nộp bài.
+      *`git log --format="%an <%ae>" | sort -u` trên `main` cho đủ **5/5**:
+      Pham Quang Huy, Do Tung, Tai-SE173015, hoang nguyen, Ninh Quang Minh.*
 - [x] Phần reflection chung của nhóm đã hoàn thành và có evidence.
       *Mục C1, dẫn đến `version_log.csv`, 3 run trong `runs/`, 7 transcript và
       `scripts/smoke_all_tools.py`.*
 - [ ] Mỗi thành viên đã tự viết và commit self-reflection của mình.
-      ***3/5**: Trần Võ Hoàng Nguyên, Đỗ Thanh Tùng, Phạm Quang Huy. Còn thiếu
-      Nguyễn Như Tài và Ninh Quang Minh — khung C2 đã đặt sẵn tên cho hai bạn.*
-- [ ] `system_prompt.md`, `tools.yaml`, version log, runs, eval, transcript, UI
+      ***4/5 đã có nội dung**: Trần Võ Hoàng Nguyên, Đỗ Thanh Tùng, Phạm Quang
+      Huy, Ninh Quang Minh. **Còn thiếu Nguyễn Như Tài** — khung C2 đã đặt sẵn
+      tên. Lưu ý thêm: nội dung của Ninh Quang Minh được khôi phục từ
+      `REFLECTION.md` (commit `14c0a15`) và chuyển về C2, bạn Minh cần tự xác
+      nhận và commit lại bằng Git identity của mình cho đúng yêu cầu "tự viết và
+      tự commit".*
+- [x] `system_prompt.md`, `tools.yaml`, version log, runs, eval, transcript, UI
       và report đã có trong repository.
-      *Đã có: `system_prompt.md`, `tools.yaml`, `version_log.csv`, `eval_group.json`,
-      `eval_adversarial.json`, 3 run evidence, 7 transcript, `REPORT.md`.
-      **Còn thiếu 2 thứ:** (1) `starter_v0/app.py` — UI chưa được tạo;
-      (2) bốn run file của suite `base` mà `version_log.csv` dẫn chiếu (xem B1),
-      cần `git add -f`.*
+      *Đủ cả 8 nhóm deliverable: `system_prompt.md`, `tools.yaml`,
+      `version_log.csv`, 4 run evidence (`base` v3, `group` v0 + v3,
+      `adversarial` v3), `eval_group.json` + `eval_adversarial.json`,
+      7 transcript, UI `app.py` (đã verify boot được và tái dùng
+      `run_model_tool_loop`), `REPORT.md`. Ghi chú ở B1: bốn run file `base` gốc
+      mà `version_log.csv` dẫn chiếu vẫn không có — đã chạy lại `base` trên `v3`
+      để bù, số liệu khớp.*
 - [x] Không có `.env`, API key, token, dữ liệu thật, cache hoặc generated ticket.
       *`git ls-files` không khớp `.env`, `.venv/`, `__pycache__`, `tickets/`.
       Ba ticket sinh ra khi rehearse demo đã được chụp nội dung rồi xoá;
@@ -662,13 +729,13 @@ repository chung:
 
 > https://github.com/tungne1311/K4A-Day04-5AESIUNHAN
 
-**Tóm tắt việc còn phải làm trước khi nộp** (theo thứ tự chặn):
+**Tóm tắt việc còn phải làm trước khi nộp** — chỉ còn đúng một người:
 
-1. **Ninh Quang Minh** — tạo `starter_v0/app.py` (Streamlit, tái dùng
-   `run_model_tool_loop` từ `chat.py`), cập nhật `requirements.txt`, commit bằng
-   Git identity của mình rồi điền C2. Đây là item chặn hai dòng checklist cùng
-   lúc: deliverable UI và commit của thành viên.
-2. **Nguyễn Như Tài** — `git add -f` bốn run file của suite `base` được dẫn trong
-   `version_log.csv`, và điền C2.
-3. **Cả nhóm** — chạy lại `git log --format="%h | %an <%ae> | %s"` trên `main`
-   xác nhận đủ 5 người, rồi mới nộp URL trên VLearn.
+1. **Nguyễn Như Tài** — điền mục C2 của mình (khung đã đặt sẵn tên ở trên). Nếu
+   bốn run file của suite `base` còn trên máy thì `git add -f` chúng vào
+   `runs/`; nếu đã mất thì không sao, run `base` chạy lại trên `v3` đã có trong
+   repo và cho đúng con số ghi trong `version_log.csv`.
+2. **Ninh Quang Minh** — đọc lại mục C2 đã khôi phục từ `REFLECTION.md`, bổ sung
+   dòng *"Nếu làm lại…"* và tự commit bằng Git identity của mình.
+3. **Cả nhóm** — chạy `git log --format="%h | %an <%ae> | %s"` trên `main` xác
+   nhận đủ 5 người (hiện đã đủ), rồi nộp cùng URL trên VLearn.
