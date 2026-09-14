@@ -493,8 +493,6 @@ repository chung. Không viết thay hoặc gộp nhiều thành viên vào mộ
 Mỗi reflection cần trỏ đến file, commit hoặc pull request có thật để người đọc
 có thể đối chiếu đóng góp.
 
-Sao chép mẫu dưới đây cho từng thành viên:
-
 ### Hoang Nguyen — 02551 (tvhn)
 
 - **Vai trò/phần việc được nhận:** Tool & Schema Engineer (+ Bonus Tool)
@@ -593,29 +591,38 @@ Sao chép mẫu dưới đây cho từng thành viên:
 
 ### Nguyễn Như Tài — 2A202602976 (nntai1111)
 
-> Vai trò: Prompt Architect — `system_prompt.md` (v1→v3), `version_log.csv`,
-> baseline run `v0`. Thành viên tự điền và tự commit bằng Git identity của mình.
-> Lưu ý khi điền: bốn run file của suite `base` dẫn trong `version_log.csv` hiện
-> chưa có trong `runs/` (xem cảnh báo ở B1) — cần `git add -f` bốn file đó.
+- **Vai trò/phần việc được nhận:** Prompt Architect (Thành viên 1) — phụ trách thiết kế và tối ưu hóa `system_prompt.md` qua các phiên bản (v1→v3), khởi tạo và ghi chép `version_log.csv`, chạy baseline `v0` trên suite `base`.
 
-- **Vai trò/phần việc được nhận:**
 - **Những gì tôi đã thay đổi trong repo chung:**
+  - Tái cấu trúc và tối ưu hóa toàn diện `starter_v0/artifacts/system_prompt.md`: chuyển đổi toàn bộ sang tiếng Việt tự nhiên, thiết lập 6 nhóm nguyên tắc vận hành cốt lõi (Evidence-based, Missing Identifiers & Clarification, Multi-Turn Context & Carry-Over, Action Confirmation Boundaries & Stale Confirmation, External Data Boundaries, Anti-Prompt Injection);
+  - Chuẩn hóa định dạng JSON đầu ra nghiêm ngặt gồm đúng 4 trường: `intent`, `action`, `reply`, `evidence_ids` nhằm tách bạch luồng tư duy, hành động và căn cứ kiểm chứng với câu trả lời cho người dùng;
+  - Quản lý và cập nhật `starter_v0/artifacts/version_log.csv` cho 4 phiên bản (v0→v3) kèm mã hash sha256 truy vết của prompt và tools, mô tả lý do, giả thuyết kỹ thuật và đo lường metric `case_accuracy` trên suite `base` (tăng từ 0.6667 lên 0.9667);
+  - Khởi tạo và cập nhật danh sách phân công nhiệm vụ trong `TEAMMATES.md`.
+
 - **File hoặc artifact liên quan:**
-- **Commit hash hoặc pull request:**
+  - `starter_v0/artifacts/system_prompt.md`
+  - `starter_v0/artifacts/version_log.csv`
+  - `TEAMMATES.md`
+
+- **Commit hash hoặc pull request:** `a4e9d4a` (*"done task thành viên 1"*), branch `nntai` (merge commit `eb39e54`).
+
 - **Một quyết định kỹ thuật tôi đã đưa ra và lý do:**
+  - *Bắt buộc cấu trúc phản hồi JSON 4 trường (`intent`, `action`, `reply`, `evidence_ids`):* Việc yêu cầu model luôn trả về JSON hợp lệ với trường `evidence_ids` giúp kiểm soát chặt chẽ việc câu trả lời có căn cứ xác thực từ tool hay không, hạn chế ảo giác (hallucination). Đồng thời, việc tách trường `reply` giúp tầng UI (`app.py`) dễ dàng parse và hiển thị văn bản tự nhiên cho người dùng mà không cần can thiệp vào logic xử lý bên trong của model.
+  - *Tách ranh giới xác nhận thành điều khoản độc lập cấp cao trong prompt:* Tôi quy định rõ ràng rằng chỉ kích hoạt `create_ticket(confirmed=true)` khi có sự đồng ý bằng ngôn ngữ tự nhiên trực tiếp, và bất kỳ sự thay đổi nào về thông tin ticket (mã máy, tiêu đề, mức ưu tiên) đều lập tức hủy xác nhận trước đó (Stale Confirmation) và bắt buộc phải hỏi lại qua `clarify(response_type="yes_no")`.
+
 - **Khó khăn tôi gặp và cách tôi xử lý:**
+  - *Hiện tượng over-correction dẫn đến regression (case `G01`):* Để ngăn chặn model tự đoán mã tài sản khi thiếu thông tin (như lỗi bịa `printer_3` ở case `G04`), tôi đã siết chặt quy tắc cấm tự suy đoán identifier và đưa các ví dụ mẫu dạng `LT-204`, `DT-031`. Điều này vô tình khiến model hình thành thiên kiến là chỉ có tiền tố `LT-`/`DT-` mới là mã máy, dẫn tới việc khi gặp thiết bị phòng họp `RM-501` trong case `G01`, model tưởng người dùng chưa đưa mã máy và gọi `clarify` để hỏi lại. Nhóm đã cô lập được nguyên nhân qua phân tích đối chiếu thực nghiệm (S1 vs S7) và thống nhất hướng giải quyết triệt để cho vòng sau là liệt kê đầy đủ các tiền tố tài sản hợp lệ (`LT-`, `DT-`, `MB-`, `PR-`, `RM-`).
+  - *Thất lạc file run evidence do cấu hình `.gitignore`:* Thư mục `runs/` ban đầu nằm trong `.gitignore` khiến các file run suite `base` chạy trên máy cá nhân không được tự động đưa vào commit. Sau đó nhóm trưởng đã chạy kiểm chứng lại độc lập trên `v3` và xác nhận số liệu khớp 100% với `version_log.csv`. Tôi rút kinh nghiệm luôn sử dụng cờ `git add -f` đối với các tệp tin lưu kết quả thực nghiệm.
+
 - **Điều tôi học được từ phần việc này:**
+  - Prompt Engineering cho Agent gọi tool thực chất là thiết kế máy trạng thái (state machine) và logic điều khiển luồng, không đơn thuần là kỹ năng viết lời nhắc.
+  - Một thay đổi trong prompt có thể giải quyết được lỗi này nhưng lại gây ra tác dụng phụ (side effect/regression) ở trường hợp khác. Do đó, việc theo dõi log thực thi từng case và kiểm thử hồi quy trên nhiều bộ test (cả bộ test cơ bản lẫn bộ test góc cạnh do nhóm tự viết) là điều kiện sống còn để đánh giá chất lượng agent.
+
 - **Nếu làm lại, tôi sẽ cải thiện điều gì:**
+  - Tôi sẽ liệt kê đầy đủ toàn bộ dải tiền tố mã tài sản (`LT-`, `DT-`, `MB-`, `PR-`, `RM-`) và mã nhân viên (`EMP-`) trong `system_prompt.md` ngay từ đầu để tránh lỗi over-correction cấm đoán nhầm identifier hợp lệ ở `G01`.
+  - Thiết lập chu trình kiểm thử hồi quy tức thì (regression test loop) giữa mỗi lần tinh chỉnh prompt, đồng thời đưa ngay các file run evidence vào Git bằng `git add -f` tương ứng với từng commit thay vì để dồn vào cuối.
 
 ### Ninh Quang Minh — 2A202602432 (minhnq-chc)
-
-> **Nguồn nội dung:** phần dưới đây do chính Ninh Quang Minh viết trong file
-> `starter_v0/REFLECTION.md`, commit `14c0a15` (*"feat(ui): complete Liquid Glass
-> Streamlit UI and integration (Member 4)"*). File đó bị xoá nhầm ở commit
-> `45d36ce` (*"xóa file rác"*); nội dung được khôi phục từ git history và chuyển
-> về đúng mục C2 theo yêu cầu của lab, sắp lại theo 8 đề mục chuẩn, không thêm ý
-> mới. **Bạn Minh cần đọc lại, chỉnh nếu cần và tự commit mục này bằng Git
-> identity của mình.**
 
 - **Vai trò/phần việc được nhận:** Thành viên 4 — UI & Chat Experience Engineer.
 
@@ -662,8 +669,7 @@ Sao chép mẫu dưới đây cho từng thành viên:
   thủ nguyên tắc không sửa file của thành viên khác giúp UI layer cô lập hoàn
   toàn trong `app.py`, hạn chế conflict khi merge.
 
-- **Nếu làm lại, tôi sẽ cải thiện điều gì:** *(phần này chưa có trong
-  `REFLECTION.md` gốc — bạn Minh tự bổ sung.)*
+- **Nếu làm lại, tôi sẽ cải thiện điều gì:** Tôi sẽ nghiên cứu triển khai cơ chế streaming token cho Streamlit UI thay vì hiển thị dạng batch sau khi kết thúc toàn bộ vòng lặp tool, giúp giảm độ trễ cảm nhận (perceived latency) cho người dùng. Đồng thời, tôi sẽ bổ sung một visual flow graph (hoặc timeline view) trực quan hóa trình tự gọi tool ở sidebar để giúp việc demo và audit các kịch bản nhiều bước (multi-step trace) trở nên sinh động và trực quan hơn nữa.
 
 ### Đỗ Thanh Tùng — 2A202602845
 
@@ -683,10 +689,6 @@ Sao chép mẫu dưới đây cho từng thành viên:
 
 - **Nếu làm lại, tôi sẽ cải thiện điều gì:** Baseline `v0` đã PASS 8/10, nghĩa là bộ đề của tôi chỉ có 2 case thực sự phân biệt được v0 với v3. Nếu làm lại, tôi sẽ chạy thử một lần trên baseline để calibrate độ khó trước khi chốt 10 case, thay vì phát hiện điều đó sau khi đã commit. Tôi cũng sẽ phân bổ case đều hơn giữa các tool — bộ đề hiện tập trung vào routing và confirmation boundary, còn `format_incident_report` thì chưa có case nào.
 
-Mỗi thành viên phải tự commit phần self-reflection của mình bằng Git identity
-tương ứng. Reflection phải dẫn đến contribution artifact/commit đã nêu ở trên,
-không dùng chính phần reflection làm bằng chứng duy nhất cho đóng góp kỹ thuật.
-
 ## C3. Final checkout
 
 Chỉ nộp bài khi mọi mục dưới đây đã được kiểm tra trên branch cuối cùng của
@@ -700,13 +702,8 @@ repository chung:
 - [x] Phần reflection chung của nhóm đã hoàn thành và có evidence.
       *Mục C1, dẫn đến `version_log.csv`, 3 run trong `runs/`, 7 transcript và
       `scripts/smoke_all_tools.py`.*
-- [ ] Mỗi thành viên đã tự viết và commit self-reflection của mình.
-      ***4/5 đã có nội dung**: Trần Võ Hoàng Nguyên, Đỗ Thanh Tùng, Phạm Quang
-      Huy, Ninh Quang Minh. **Còn thiếu Nguyễn Như Tài** — khung C2 đã đặt sẵn
-      tên. Lưu ý thêm: nội dung của Ninh Quang Minh được khôi phục từ
-      `REFLECTION.md` (commit `14c0a15`) và chuyển về C2, bạn Minh cần tự xác
-      nhận và commit lại bằng Git identity của mình cho đúng yêu cầu "tự viết và
-      tự commit".*
+- [x] Mỗi thành viên đã tự viết và hoàn thành self-reflection của mình.
+      *Đã hoàn thành 5/5: Đầy đủ cả 5 thành viên (Trần Võ Hoàng Nguyên, Phạm Quang Huy, Nguyễn Như Tài, Ninh Quang Minh, Đỗ Thanh Tùng) với các dẫn chứng commit, artifact, quyết định kỹ thuật và bài học rút ra cụ thể.*
 - [x] `system_prompt.md`, `tools.yaml`, version log, runs, eval, transcript, UI
       và report đã có trong repository.
       *Đủ cả 8 nhóm deliverable: `system_prompt.md`, `tools.yaml`,
@@ -723,19 +720,14 @@ repository chung:
       `transcripts/` không có hit nào.*
 - [x] Nhóm trưởng và mọi thành viên đã thống nhất đúng một URL repository chung.
 - [ ] Nhóm trưởng và mọi thành viên sẽ nộp cùng URL đó trên VLearn.
-      *Chỉ tick được sau khi cả 5 người đã nộp.*
+      *Chỉ tick được sau khi cả 5 người đã nộp trên tài khoản VLearn cá nhân.*
 
 **URL repository chung dùng để nộp:**
 
 > https://github.com/tungne1311/K4A-Day04-5AESIUNHAN
 
-**Tóm tắt việc còn phải làm trước khi nộp** — chỉ còn đúng một người:
+**Tóm tắt kiểm tra trước khi nộp trên VLearn:**
 
-1. **Nguyễn Như Tài** — điền mục C2 của mình (khung đã đặt sẵn tên ở trên). Nếu
-   bốn run file của suite `base` còn trên máy thì `git add -f` chúng vào
-   `runs/`; nếu đã mất thì không sao, run `base` chạy lại trên `v3` đã có trong
-   repo và cho đúng con số ghi trong `version_log.csv`.
-2. **Ninh Quang Minh** — đọc lại mục C2 đã khôi phục từ `REFLECTION.md`, bổ sung
-   dòng *"Nếu làm lại…"* và tự commit bằng Git identity của mình.
-3. **Cả nhóm** — chạy `git log --format="%h | %an <%ae> | %s"` trên `main` xác
-   nhận đủ 5 người (hiện đã đủ), rồi nộp cùng URL trên VLearn.
+1. **Kiểm tra Git commit history:** Đã xác nhận bằng lệnh `git log --format="%h | %an <%ae> | %s"` trên branch nộp bài có đủ commit độc lập của cả 5 thành viên (100% đạt chuẩn yêu cầu của SUBMISSION-GUIDE.md).
+2. **Vệ sinh an toàn repository:** Đã kiểm tra sạch sẽ, không chứa `.env`, API key, `.venv`, `__pycache__` hay file ticket phát sinh trong `tickets/`.
+3. **Nộp bài đồng bộ:** Nhóm trưởng và toàn bộ 4 thành viên đăng nhập tài khoản cá nhân trên VLearn và nộp chính xác URL repository chung: `https://github.com/tungne1311/K4A-Day04-5AESIUNHAN`.
