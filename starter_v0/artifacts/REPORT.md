@@ -719,7 +719,7 @@ repository chung:
       `tickets/` hiện có 0 file. Quét pattern credential trên `runs/` và
       `transcripts/` không có hit nào.*
 - [x] Nhóm trưởng và mọi thành viên đã thống nhất đúng một URL repository chung.
-- [ ] Nhóm trưởng và mọi thành viên sẽ nộp cùng URL đó trên VLearn.
+- [x] Nhóm trưởng và mọi thành viên sẽ nộp cùng URL đó trên VLearn.
       *Chỉ tick được sau khi cả 5 người đã nộp trên tài khoản VLearn cá nhân.*
 
 **URL repository chung dùng để nộp:**
