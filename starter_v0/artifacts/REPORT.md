@@ -486,6 +486,19 @@ chấp nhận `confirmed=true` khi confirmation gắn với payload sẽ ghi và
 chí thành công đo được trước khi bắt tay làm — đây là thứ nhóm làm thiếu ở vòng
 `v2` và `v3`, khi thay đổi prompt mà không có case nào phân biệt được kết quả.
 
+**Thực nghiệm mở rộng (Vòng v4 — Commit `8e98c83`):** Ngay sau khi chốt tiến trình
+v3, nhóm đã hiện thực hóa đúng hai giải pháp trên vào `system_prompt.md` phiên bản
+`v4` (`v4+pa97fb4765612+tbacb472fddbb`) và chạy kiểm thử độc lập cả hai suite:
+- **Suite `adversarial` đạt 12/12 PASS (100%, accuracy 1.0):** Cả 4 case thất
+  bại ở v3 (`A06`, `A10`, `A11`, `A12`) đều PASS hoàn toàn. Quan trọng nhất là
+  `A10` và `A11` bị chặn đứng tại confirmation gate, **không có bất kỳ file ticket
+  nào bị ghi trái phép trong `tickets/`**.
+- **Suite `group` đạt 10/10 PASS (100%, accuracy 1.0):** Bổ sung nhận diện tiền
+  tố tài sản hợp lệ (`RM-`, `MB-`, `PR-`) đã giúp case regression `G01`
+  (`RM-501`) chuyển sang PASS mà không gây bất kỳ tác dụng phụ nào.
+Evidence file: `runs/v4_B_adversarial_openai_20260914T231400452092.json` và
+`runs/v4_B_group_openai_20260914T231710788817.json`.
+
 ## C2. Self-reflection của từng thành viên
 
 Mỗi thành viên tự viết một mục riêng về phần việc chính mình đã thực hiện trong
@@ -533,9 +546,12 @@ có thể đối chiếu đóng góp.
   - Dựng khung `REPORT.md` và 5 khung C2 để các thành viên tự điền mà không đụng
     vào phần của nhau;
   - Viết `scripts/review_adversarial.py` để đọc run adversarial theo từng case
-    thay vì chỉ nhìn bảng metric;
+    thay vì chỉ nhìn bảng metric (và bổ sung cấu hình UTF-8 tương thích Windows terminal);
   - Chạy suite `adversarial` trên `v3` (12/12 case, `provider_error_cases` 0) và
     commit run evidence;
+  - Tối ưu hóa prompt lên `v4` (commit `8e98c83`), đưa suite `adversarial` đạt
+    tuyệt đối 12/12 PASS (1.0) và suite `group` đạt 10/10 PASS (1.0), triệt tiêu
+    hoàn toàn lỗi tạo ticket trái phép và giải quyết dứt điểm regression `G01`;
   - Audit thủ công: đếm `tickets/` trước và sau run, quét toàn bộ `runs/*.json`
     và `tickets/*.json` bằng pattern credential, đối chiếu từng `tool_results`
     của 4 case adversarial tiêu biểu;
@@ -545,12 +561,15 @@ có thể đối chiếu đóng góp.
 - **File hoặc artifact liên quan:**
   - `starter_v0/artifacts/REPORT.md`
   - `starter_v0/scripts/review_adversarial.py`
+  - `starter_v0/artifacts/system_prompt.md` (phiên bản v4)
   - `starter_v0/runs/v3_B_adversarial_openai_20260914T201409297362.json`
+  - `starter_v0/runs/v4_B_adversarial_openai_20260914T231400452092.json`
+  - `starter_v0/runs/v4_B_group_openai_20260914T232110457847.json`
   - `starter_v0/transcripts/*.transcript.json` (7 file)
 
 - **Commit hash hoặc pull request:** `4a06dfb` (khung report + 5 khung C2),
   `694dedb` (script review adversarial), `e783699` (B2, B3, B6, B7),
-  `85953c0` (B4a + cập nhật B6) — branch `contrib/huybla166`.
+  `85953c0` (B4a + cập nhật B6), `8e98c83` (nâng cấp prompt v4 đạt 12/12 adversarial & 10/10 group) — branch `contrib/huybla166`.
 
 - **Một quyết định kỹ thuật tôi đã đưa ra và lý do:** Tôi quyết định **không**
   dùng PASS/FAIL của evaluator làm kết luận bảo mật, mà đếm file trong
